@@ -101,7 +101,7 @@ static inline int __attribute__((always_inline)) antidebug_signal_check()
 #endif
 
   int oldval = sigtrap_counter;
-  asm volatile ("int3");
+  asm volatile ("brk #0"); // ARM64: trigger SIGTRAP
 
   return sigtrap_counter != oldval + 1;
 }

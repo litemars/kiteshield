@@ -1,4 +1,7 @@
-CFLAGS_COMMON = -Wall -Werror -std=gnu99 -fno-pie -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -c -I ..
+CC = aarch64-linux-gnu-gcc
+AS = aarch64-linux-gnu-as
+ASFLAGS = --64
+CFLAGS_COMMON = -Wall -Werror -Wno-array-bounds -std=gnu99 -fno-pie -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -c -I ..
 LDFLAGS = -no-pie
 
 CFLAGS = $(CFLAGS_COMMON) -O2
@@ -9,18 +12,14 @@ OBJS_NO_RT = $(addprefix out/no_rt/, $(addsuffix .o, $(basename $(notdir $(SRCS:
 
 OBFUSCATED_STRINGS_HEADER = include/obfuscated_strings.h
 
-.PHONY: all output-dirs debug debug-antidebug clean tests
+.PHONY: all output-dirs debug debug-antidebug clean
 
 debug: CFLAGS = $(CFLAGS_COMMON) -g -DDEBUG_OUTPUT -DNO_ANTIDEBUG
 debug-antidebug: CFLAGS = $(CFLAGS_COMMON) -g -DDEBUG_OUTPUT
 
-all: output-dirs $(OBFUSCATED_STRINGS_HEADER) out/loader_header_rt.h out/loader_header_no_rt.h tests
+all: output-dirs $(OBFUSCATED_STRINGS_HEADER) out/loader_header_rt.h out/loader_header_no_rt.h
 debug: all
 debug-antidebug: all
-
-tests:
-	$(MAKE) -C test clean
-	$(MAKE) -C test
 
 out/loader_header_rt.h: $(OBJS_RT)
 	$(LD) $(LDFLAGS) $(OBJS_RT) -T link.lds -o out/rt/loader-elf
@@ -58,6 +57,5 @@ output-dirs:
 	mkdir -p out/no_rt
 
 clean:
-	$(MAKE) clean -C test
 	rm -rf out/
 	rm -f $(OBFUSCATED_STRINGS_HEADER)

@@ -15,9 +15,15 @@ void sigtrap_handler(int sig)
  * rt_sigaction(2) given our freestanding environment.
  */
 void restorer();
-asm ("restorer:\n"
-     "  mov $15, %rax\n"
-     "  syscall");
+__asm__(
+    ".text\n"
+    ".align 4\n"
+    ".type restorer, %function\n"
+    ".global restorer\n"
+    "restorer:\n"
+    "mov x8, #139\n"      // syscall number for rt_sigreturn on aarch64
+    "svc #0\n"
+);
 
 void antidebug_signal_init()
 {

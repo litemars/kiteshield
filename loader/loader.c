@@ -269,7 +269,9 @@ static void decrypt_packed_bin(
   struct rc4_state rc4;
   rc4_init(&rc4, key->bytes, sizeof(key->bytes));
 
-  DEBUG_FMT("RC4 decrypting binary with key %s", STRINGIFY_KEY(key));
+  char buf[(sizeof((key)->bytes) * 2) + 1];
+  STRINGIFY_KEY(buf, key);
+  DEBUG_FMT("RC4 decrypting binary with key %s", buf);
 
   unsigned char *curr = packed_bin_start;
   for (int i = 0; i < packed_bin_size; i++) {

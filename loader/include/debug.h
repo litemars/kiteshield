@@ -11,8 +11,8 @@
  * (printing keys) isn't really of any value. Better to just special case it
  * here.
  */
-#define STRINGIFY_KEY(key) \
-  ({ char buf[(sizeof((key)->bytes) * 2) + 1]; \
+ #define STRINGIFY_KEY(buf, key) \
+ { \
      char *buf_ptr = buf; \
      for (int i = 0; i < KEY_SIZE; i++) { \
        uint8_t byte = (key)->bytes[i]; \
@@ -26,7 +26,7 @@
        } \
      }; \
      buf[sizeof((key)->bytes) * 2] = '\0'; \
-     buf; }) \
+ }
 
 #ifdef DEBUG_OUTPUT
 #define DEBUG(fmtstr) ks_printf(1, KITESHIELD_PREFIX fmtstr "\n")

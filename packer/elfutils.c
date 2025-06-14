@@ -32,8 +32,9 @@ const Elf64_Shdr *elf_get_sec_by_name(
   Elf64_Shdr *curr_shdr = elf->shdr_tbl;
 
   for (int i = 0; i < elf->ehdr->e_shnum; i++) {
+    const char* sec_name = elf_get_sec_name(elf, curr_shdr);
     if (curr_shdr->sh_type != SHT_NULL &&
-        strcmp(elf_get_sec_name(elf, curr_shdr), name) == 0)
+        sec_name != NULL && strcmp(sec_name, name) == 0)
       return curr_shdr;
 
     curr_shdr++;

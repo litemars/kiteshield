@@ -2,58 +2,49 @@
 .global _start
 
 _start:
-  # Per the SysV ABI, the value of %rbp is undefined upon getting control from
-  # the kernel and should be set to 0 manually to mark the deepest stack frame.
-  xor %ebp, %ebp
+    // On AArch64, x0-x7 are argument registers, x29 is fp, x30 is lr
+    mov x29, xzr        // Zero frame pointer
+    mov x0, sp          // Pass stack pointer as entry_stacktop to load
 
 #ifdef USE_RUNTIME
-  # Fork, starting the runtime in the parent process and returning in the child
-  call do_fork
-
-  # We've now forked. The runtime is running in our parent and will not return.
-  # here. Only the child will execute the code below.
+    bl do_fork          // Call do_fork (returns only in child)
 #endif
 
-  # Load function has the following signature
-  # void load(void *entry_stacktop)
-  mov %rsp, %rdi # entry_stacktop
-  call load
-
-  # Return value of load is the address of ld.so to jump to, store it
-  push %rax
+    bl load             // Call load(entry_stacktop)
+    mov x19, x0         // Save return value (ld.so entry point) in x19
 
 #ifdef USE_RUNTIME
-  # Binary has been mapped into memory, have the parent ptrace the child
-  call child_start_ptrace
+    bl child_start_ptrace
 #endif
 
-  # The x86-64 SysV ABI specifies that %rdx contains the address of a function
-  # to be registered by libc with atexit upon entry (or 0 to indicate no
-  # function). In practice, Linux always sets this to 0 (see ELF_PLAT_INIT
-  # macro in kernel sources) before handing control to userspace. This register
-  # was probably clobbered by the calls to load/do_fork above, so zero it
-  # before we jump to program entry so the libc doesn't register a garbage
-  # address as an exit handler.
-  xor %edx, %edx
+    // Zero non-privileged registers (not strictly necessary, but for determinism)
+    mov x1, xzr
+    mov x2, xzr
+    mov x3, xzr
+    mov x4, xzr
+    mov x5, xzr
+    mov x6, xzr
+    mov x7, xzr
+    mov x8, xzr
+    mov x9, xzr
+    mov x10, xzr
+    mov x11, xzr
+    mov x12, xzr
+    mov x13, xzr
+    mov x14, xzr
+    mov x15, xzr
+    mov x16, xzr
+    mov x17, xzr
+    mov x18, xzr
+    mov x20, xzr
+    mov x21, xzr
+    mov x22, xzr
+    mov x23, xzr
+    mov x24, xzr
+    mov x25, xzr
+    mov x26, xzr
+    mov x27, xzr
+    mov x28, xzr
+    mov x30, xzr
 
-  # While we're at it, zero all the other non-privileged registers (besides
-  # %rbx, which is holding the program entry point to jump to) that Linux
-  # normally zeros before handing control to userspace. Unlike %rdx, this isn't
-  # strictly necessary, but we'll do it anyways to make things as deterministic
-  # as possible.
-  xor %eax, %eax
-  xor %ecx, %ecx
-  xor %esi, %esi
-  xor %edi, %edi
-  xor %ebp, %ebp
-  xor %r8d, %r8d
-  xor %r9d, %r9d
-  xor %r10d, %r10d
-  xor %r11d, %r11d
-  xor %r12d, %r12d
-  xor %r13d, %r13d
-  xor %r14d, %r14d
-  xor %r15d, %r15d
-
-  pop %rbx
-  jmp *%rbx
+    br x19              // Jump to ld.so entry point

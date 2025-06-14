@@ -287,9 +287,11 @@ static void handle_fcn_entry(
   struct function *fcn = FCN_FROM_TP(tp);
 
   if (FCN_REFCNT(thread, fcn) == 0) {
+    char buf[(sizeof((&fcn->key)->bytes) * 2) + 1];
+    STRINGIFY_KEY(buf, &fcn->key)
     DEBUG_FMT(
         "tid %d: entering encrypted function %s decrypting with key %s",
-        thread->tid, fcn->name, STRINGIFY_KEY(&fcn->key));
+        thread->tid, fcn->name, buf);
 
     rc4_xor_fcn(thread->tid, fcn);
   } else {
@@ -338,8 +340,10 @@ static void handle_fcn_exit(
 
     /* Encrypt the function we're leaving provided no other thread is in it */
     if (FCN_REFCNT(thread, prev_fcn) == 0) {
+      char buf[(sizeof((&new_fcn->key)->bytes) * 2) + 1];
+      STRINGIFY_KEY(buf, &new_fcn->key)
       DEBUG_FMT("tid %d: no other threads were executing in %s, encrypting with key %s",
-                thread->tid, prev_fcn->name, STRINGIFY_KEY(&new_fcn->key));
+                thread->tid, prev_fcn->name, buf);
 
       rc4_xor_fcn(thread->tid, prev_fcn);
       set_byte_at_addr(thread->tid, prev_fcn->start_addr, INT3);
@@ -347,7 +351,7 @@ static void handle_fcn_exit(
 
     /* If this is a jump to the start instruction of a function, do not execute
      * any of the code under this conditional (decryption if requried and
-     * refcount bump will be handled by handle_fcn_entry).
+     * refcount bump will be handled in handle_fcn_entry).
      *
      * If this is a jump to the middle of a function, we're not going to hit
      * the entry trap point for the function, so that work must be done here.
@@ -358,8 +362,10 @@ static void handle_fcn_exit(
       DEBUG_FMT("tid %d: function %s is being entered via jmp at non start address %p",
                 thread->tid, new_fcn->name, regs.ip);
       if (FCN_REFCNT(thread, new_fcn) == 0) {
+        char buf[(sizeof((&new_fcn->key)->bytes) * 2) + 1];
+        STRINGIFY_KEY(buf, &new_fcn->key)
         DEBUG_FMT("tid %d: function %s being entered is encrypted, decrypting with key %s",
-                  thread->tid, new_fcn->name, STRINGIFY_KEY(&new_fcn->key));
+                  thread->tid, new_fcn->name, buf);
 
         rc4_xor_fcn(thread->tid, new_fcn);
         set_byte_at_addr(thread->tid, new_fcn->start_addr, INT3);

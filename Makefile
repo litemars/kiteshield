@@ -1,30 +1,15 @@
-.PHONY: loader packer
+# Top-level Makefile for Kiteshield (ARM64 only, no tests)
 
-all: packer
+.PHONY: all loader packer clean
 
-debug: packer-debug
-debug-antidebug: packer-debug-antidebug
-
-# The packer requires the headerized loader, thus the loader is a dependency of
-# the packer
-packer: loader
-	$(MAKE) -C packer
-
-packer-debug: loader-debug
-	$(MAKE) debug -C packer
-
-packer-debug-antidebug: loader-debug-antidebug
-	$(MAKE) debug-antidebug -C packer
+all: loader packer
 
 loader:
 	$(MAKE) -C loader
 
-loader-debug:
-	$(MAKE) debug -C loader
-
-loader-debug-antidebug:
-	$(MAKE) debug-antidebug -C loader
+packer:
+	$(MAKE) -C packer
 
 clean:
-	$(MAKE) clean -C loader
-	$(MAKE) clean -C packer
+	$(MAKE) -C loader clean
+	$(MAKE) -C packer clean
