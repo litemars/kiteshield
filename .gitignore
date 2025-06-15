@@ -1,17 +1,8 @@
-# CMake/Intellij
-CMakeLists.txt
-cmake-build*
-.idea
-
-# Vim
-*~
-*.swp
-
 # Build artifacts
 packer/obj/
 loader/out/
 loader/test/out/
-testing/out
+test/binary
 packer/kiteshield
 loader/include/obfuscated_strings.h
 
